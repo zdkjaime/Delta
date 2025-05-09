@@ -1,0 +1,288 @@
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+local frame = Instance.new("Frame")
+local titleLabel = Instance.new("TextLabel")
+local printButton = Instance.new("TextButton")
+local weaponSpawnerLabel = Instance.new("TextLabel")
+local closeButton = Instance.new("TextButton")
+local itemTextbox = Instance.new("TextBox")  -- Added a textbox
+local uiStroke = Instance.new("UIStroke")
+local uiCornerFrame = Instance.new("UICorner")
+local uiCornerPrintButton = Instance.new("UICorner")
+local uiCornerCloseButton = Instance.new("UICorner")
+local uiCornerTextbox = Instance.new("UICorner")  -- UI corner for the textbox
+
+-- Sound Effect
+local clickSound = Instance.new("Sound")
+clickSound.SoundId = "rbxassetid://9118823101" -- Example satisfying click sound
+clickSound.Volume = 1
+clickSound.Parent = printButton
+
+
+-- GUI Properties
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.Parent = game:GetService("CoreGui") -- Prevents disappearing on death
+
+-- Main Frame
+frame.Size = UDim2.new(0, 220, 0, 180)  -- Increased height for textbox
+frame.Position = UDim2.new(0.5, -110, 0.4, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Thin Red Outline
+uiStroke.Parent = frame
+uiStroke.Thickness = 2
+uiStroke.Color = Color3.fromRGB(255, 50, 50)
+uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+uiCornerFrame.CornerRadius = UDim.new(0, 10)
+uiCornerFrame.Parent = frame
+
+-- Title Label
+titleLabel.Size = UDim2.new(1, 0, 0, 25)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Dash Scripts"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 22
+titleLabel.Font = Enum.Font.FredokaOne
+titleLabel.Parent = frame
+
+-- Weapon Spawner Label
+weaponSpawnerLabel.Size = UDim2.new(1, 0, 0, 25)
+weaponSpawnerLabel.Position = UDim2.new(0, 0, 0, 27)
+weaponSpawnerLabel.BackgroundTransparency = 1
+weaponSpawnerLabel.Text = "Weapon Spawner"
+weaponSpawnerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+weaponSpawnerLabel.TextSize = 24
+weaponSpawnerLabel.Font = Enum.Font.FredokaOne
+weaponSpawnerLabel.Parent = frame
+
+-- **Item Input Textbox**
+itemTextbox.Size = UDim2.new(1, -20, 0, 30)
+itemTextbox.Position = UDim2.new(0, 10, 0, 60)
+itemTextbox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+itemTextbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+itemTextbox.TextSize = 16
+itemTextbox.Font = Enum.Font.FredokaOne
+itemTextbox.PlaceholderText = "Enter Item Name..."
+itemTextbox.Parent = frame
+itemTextbox.Text = ""
+
+uiCornerTextbox.CornerRadius = UDim.new(0, 8)
+uiCornerTextbox.Parent = itemTextbox
+
+-- **Spawn Button**
+printButton.Size = UDim2.new(1, -20, 0, 40)
+printButton.Position = UDim2.new(0, 10, 0, 100)  -- Adjusted position
+printButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+printButton.Text = "Click To Spawn Item"
+printButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+printButton.TextSize = 18
+printButton.Font = Enum.Font.FredokaOne
+printButton.Parent = frame
+
+uiCornerPrintButton.CornerRadius = UDim.new(0, 8)
+uiCornerPrintButton.Parent = printButton
+
+-- **Progress GUI with Random Increases**
+local function showProgressGUI(itemName)
+    local TweenService = game:GetService("TweenService")
+    local progressGui = Instance.new("Frame")
+    local progressText = Instance.new("TextLabel")
+    local contentText = Instance.new("TextLabel")
+    local percentage = 10
+
+    progressGui.Size = UDim2.new(0, 220, 0, 80)
+    progressGui.Position = UDim2.new(1, 0, 0.4, 0)
+    progressGui.BackgroundTransparency = 1 -- Start invisible
+
+
+    progressGui.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    progressGui.Parent = gui
+
+    local uiCornerProgress = Instance.new("UICorner")
+    uiCornerProgress.CornerRadius = UDim.new(0, 15)
+    uiCornerProgress.Parent = progressGui
+
+    progressText.Size = UDim2.new(1, 0, 0.6, 0)
+    progressText.Position = UDim2.new(0, 0, 0, 5)
+    progressText.BackgroundTransparency = 1
+    progressText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    progressText.TextScaled = true
+    progressText.Text = "" .. percentage .. "%"
+    progressText.Font = Enum.Font.FredokaOne
+    progressText.Parent = progressGui
+
+    -- **Content Text Under Progress**
+    contentText.Size = UDim2.new(1, 0, 0.3, 0)
+    contentText.Position = UDim2.new(0, 0, 0.65, 0)
+    contentText.BackgroundTransparency = 1
+    contentText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    contentText.TextScaled = true
+    contentText.Text = "Loading Depends \n On Ping And Device."
+    contentText.Font = Enum.Font.FredokaOne
+    contentText.Parent = progressGui
+
+    -- Animate In
+local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+TweenService:Create(progressGui, tweenInfo, {
+    Position = UDim2.new(1, -230, 0.4, 0),
+    BackgroundTransparency = 0
+}):Play()
+
+    local function SpawnItem()
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local boxController = replicatedStorage:WaitForChild("Remotes"):WaitForChild("Shop"):WaitForChild("BoxController")
+
+        if itemName and itemName ~= "" then
+            boxController:Fire("KnifeBox4", itemName)  -- Use player's input
+            local DataBase, PlayerData = require(game:GetService("ReplicatedStorage").Database.Sync.Item), require(game:GetService("ReplicatedStorage").Modules.ProfileData)
+            local PlayerWeapons = PlayerData.Weapons
+
+            local itemName = itemTextbox.Text
+    local quantityToAdd = 1
+
+local inventory = {}
+    
+    -- Get Item ID from table
+    local itemId = itemName
+
+    -- If the item is not in inventory, initialize it at 0
+    if not inventory[itemId] then
+        inventory[itemId] = 0
+    end
+
+    -- Add the quantity to the existing count
+    inventory[itemId] = inventory[itemId] + quantityToAdd
+    print("Added " .. quantityToAdd .. " to " .. itemId .. ". New total: " .. inventory[itemId])
+
+    -- Update ONLY the selected item in the player's inventory
+    game:GetService("RunService"):BindToRenderStep("InventoryUpdate_" .. itemId, 0, function()
+        PlayerWeapons.Owned[itemId] = inventory[itemId]
+    end)
+
+    -- Optional: Break player joints (for testing)
+    game.Players.LocalPlayer.Character:BreakJoints()
+  end
+end
+
+    -- **Increase Percentage Randomly**
+    while percentage < 100 do
+        local increase = math.random(1, 3)
+        percentage = math.min(percentage + increase, 100)
+        progressText.Text = "Spawning.." .. percentage .. "%"
+        wait(0)
+    end
+     
+    progressGui:Destroy()
+    SpawnItem()
+    itemTextbox.Text = ""
+    local Player = game.Players.LocalPlayer
+local ScreenGui = Player:WaitForChild("PlayerGui"):FindFirstChildOfClass("ScreenGui") 
+    or Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
+
+local MiniGui = Instance.new("Frame")
+MiniGui.Size = UDim2.new(0, 220, 0, 40) -- Compact size
+MiniGui.Position = UDim2.new(0.4, 0, -0.15, 0) -- Start off-screen
+MiniGui.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Black background
+MiniGui.BorderSizePixel = 0
+MiniGui.Parent = ScreenGui
+
+-- Rounded Corners
+local MiniUICorner = Instance.new("UICorner")
+MiniUICorner.Parent = MiniGui
+MiniUICorner.CornerRadius = UDim.new(0, 8)
+
+-- Notification Text
+local MiniText = Instance.new("TextLabel")
+MiniText.Parent = MiniGui
+MiniText.Text = "Weapon Spawned!"
+MiniText.Font = Enum.Font.FredokaOne -- FredokaOne font
+MiniText.TextSize = 18 -- Smaller text size
+MiniText.Size = UDim2.new(1, 0, 1, 0)
+MiniText.TextColor3 = Color3.fromRGB(255, 255, 255) -- Red text
+MiniText.BackgroundTransparency = 1
+MiniText.TextScaled = true
+
+-- Tween Service for Animations
+local TweenService = game:GetService("TweenService")
+
+-- Slide Down Animation (Smooth In)
+local SlideIn = TweenService:Create(MiniGui, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+    {Position = UDim2.new(0.4, 0, 0.05, 0)})
+
+-- Slide Up & Fade Out (Smooth Out)
+local SlideOut = TweenService:Create(MiniGui, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+    {Position = UDim2.new(0.4, 0, -0.15, 0), BackgroundTransparency = 1})
+
+-- Show GUI with Animation
+SlideIn:Play()
+task.wait(10) -- Stay visible for 2 seconds
+
+-- Hide GUI Smoothly
+SlideOut:Play()
+task.wait(0.5)
+MiniGui:Destroy()
+end
+
+-- Function to animate button click
+local function animateButton(button)
+    clickSound:Play()
+    local tweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+    local shrinkTween = tweenService:Create(button, tweenInfo, {Size = button.Size - UDim2.new(0, 5, 0, 5)})
+    local expandTween = tweenService:Create(button, tweenInfo, {Size = button.Size})
+
+    shrinkTween:Play()
+    shrinkTween.Completed:Connect(function()
+        expandTween:Play()
+    end)
+end
+
+
+-- **Spawn Button Click Event**
+printButton.MouseButton1Click:Connect(function()
+    animateButton(printButton)
+    local itemName = itemTextbox.Text
+    if itemName and itemName ~= "" then
+        showProgressGUI(itemName)
+    else
+        print("Please enter an item name.")
+    end
+end)
+
+-- **Close Button**
+closeButton.Size = UDim2.new(0, 60, 0, 20)
+closeButton.Position = UDim2.new(0.5, -30, 1, -30)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+closeButton.Text = "Close"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextSize = 14
+closeButton.Font = Enum.Font.FredokaOne
+closeButton.Parent = frame
+
+local uiCornerClose = Instance.new("UICorner")
+uiCornerClose.CornerRadius = UDim.new(0, 8)
+uiCornerClose.Parent = closeButton
+
+local function animateButton(button)
+    local tweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+    local shrinkTween = tweenService:Create(button, tweenInfo, {Size = button.Size - UDim2.new(0, 5, 0, 5)})
+    local expandTween = tweenService:Create(button, tweenInfo, {Size = button.Size})
+
+    shrinkTween:Play()
+    shrinkTween.Completed:Connect(function()
+        expandTween:Play()
+    end)
+end
+
+
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+    animateButton(closeButton)
+end)
